@@ -1,0 +1,47 @@
+.overlay {
+  display: none;
+
+  font-size: 1.5rem;
+  line-height: 2rem;
+
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  z-index: 1;
+
+  background: $transparent;
+}
+
+.overlay-outer {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay-inner {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  height: 100%;
+  padding: 1rem;
+}
+
+h1 {
+  color: $main-colour;
+
+  font-size: 3rem;
+  line-height: 3.5rem;
+}
+
+p {
+  font-size: 1.1rem;
+  line-height: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+em {
+  color: $main-colour;
+}

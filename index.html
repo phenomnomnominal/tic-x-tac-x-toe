@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>tic x tac x toe</title>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  </head>
+  <body>
+    <aside id="Help" class="overlay">
+      <div class="overlay-outer">
+        <div class="overlay-inner">
+          <h1>HELP</h1>
+          <p>Try to get <em>4</em> in a row in any direction!</p>
+          <p>Move the 3D board to see what's going on, then use the 2D board to make a move!</p>
+          <p id="NoWebGL">You don't have <a href="http://get.webgl.org/">WebGL</a>, so the 3D rendering might be a bit slooooow...</p>
+          <div class="button mobile-grid-60 mobile-prefix-20 mobile-suffix-20 tablet-grid-40 tablet-prefix-30 tablet-suffix-30 grid-30 prefix-35 suffix-35">Ok!</div>
+        </div>
+      </div>
+    </aside>
+    <aside id="Thinking" class="overlay">
+      <div class="overlay-outer">
+        <div class="overlay-inner">
+          <h1>Thinking...</h1>
+        </div>
+      <div>
+    </aside>
+    <aside id="EndGame" class="overlay">
+      <div class="overlay-outer">
+        <div class="overlay-inner">
+          <h1 id="Draw">It's a draw!</h1>
+          <h1 id="Player">You win!</h1>
+          <h1 id="Computer">Computer wins!</h1>
+          <span>Click anywhere to reset</span>
+        </div>
+      </div>
+    </aside>
+    <nav class="hide-on-tablet hide-on-desktop">
+      <ul>
+        <li class="active mobile-grid-50" data-tab="Board2D">2D</li>
+        <li class="mobile-grid-50" data-tab="Board3D">3D</li>
+      </ul>
+    </nav>
+    <main class="mobile-grid-100 tablet-grid-100 grid-100">
+      <section id="Board2D" class="mobile-grid-100 tablet-grid-30 grid-20">
+        <div class="plane mobile-grid-100 tablet-grid-100 grid-100">
+          <table class="mobile-grid-60 mobile-prefix-20 mobile-suffix-20 tablet-grid-60 tablet-prefix-20 tablet-suffix-20 grid-60 prefix-20 suffix-20">
+            <tr>
+              <td data-move="0"></td>
+              <td data-move="1"></td>
+              <td data-move="2"></td>
+              <td data-move="3"></td>
+            </tr>
+            <tr>
+              <td data-move="4"></td>
+              <td data-move="5"></td>
+              <td data-move="6"></td>
+              <td data-move="7"></td>
+            </tr>
+            <tr>
+              <td data-move="8"></td>
+              <td data-move="9"></td>
+              <td data-move="10"></td>
+              <td data-move="11"></td>
+            </tr>
+            <tr>
+              <td data-move="12"></td>
+              <td data-move="13"></td>
+              <td data-move="14"></td>
+              <td data-move="15"></td>
+            </tr>
+          </table>
+        </div>
+        <div class="plane mobile-grid-100 tablet-grid-100 grid-100">
+          <table class="mobile-grid-60 mobile-prefix-20 mobile-suffix-20 tablet-grid-60 tablet-prefix-20 tablet-suffix-20 grid-60 prefix-20 suffix-20">
+            <tr>
+              <td data-move="16"></td>
+              <td data-move="17"></td>
+              <td data-move="18"></td>
+              <td data-move="19"></td>
+            </tr>
+            <tr>
+              <td data-move="20"></td>
+              <td data-move="21"></td>
+              <td data-move="22"></td>
+              <td data-move="23"></td>
+            </tr>
+            <tr>
+              <td data-move="24"></td>
+              <td data-move="25"></td>
+              <td data-move="26"></td>
+              <td data-move="27"></td>
+            </tr>
+            <tr>
+              <td data-move="28"></td>
+              <td data-move="29"></td>
+              <td data-move="30"></td>
+              <td data-move="31"></td>
+            </tr>
+          </table>
+        </div>
+        <div class="plane mobile-grid-100 tablet-grid-100 grid-100">
+            <table class="mobile-grid-60 mobile-prefix-20 mobile-suffix-20 tablet-grid-60 tablet-prefix-20 tablet-suffix-20 grid-60 prefix-20 suffix-20">
+            <tr>
+              <td data-move="32"></td>
+              <td data-move="33"></td>
+              <td data-move="34"></td>
+              <td data-move="35"></td>
+            </tr>
+            <tr>
+              <td data-move="36"></td>
+              <td data-move="37"></td>
+              <td data-move="38"></td>
+              <td data-move="39"></td>
+            </tr>
+            <tr>
+              <td data-move="40"></td>
+              <td data-move="41"></td>
+              <td data-move="42"></td>
+              <td data-move="43"></td>
+            </tr>
+            <tr>
+              <td data-move="44"></td>
+              <td data-move="45"></td>
+              <td data-move="46"></td>
+              <td data-move="47"></td>
+            </tr>
+          </table>
+        </div>
+        <div class="plane mobile-grid-100 tablet-grid-100 grid-100">
+          <table class="mobile-grid-60 mobile-prefix-20 mobile-suffix-20 tablet-grid-60 tablet-prefix-20 tablet-suffix-20 grid-60 prefix-20 suffix-20">
+            <tr>
+              <td data-move="48"></td>
+              <td data-move="49"></td>
+              <td data-move="50"></td>
+              <td data-move="51"></td>
+            </tr>
+            <tr>
+              <td data-move="52"></td>
+              <td data-move="53"></td>
+              <td data-move="54"></td>
+              <td data-move="55"></td>
+            </tr>
+            <tr>
+              <td data-move="56"></td>
+              <td data-move="57"></td>
+              <td data-move="58"></td>
+              <td data-move="59"></td>
+            </tr>
+            <tr>
+              <td data-move="60"></td>
+              <td data-move="61"></td>
+              <td data-move="62"></td>
+              <td data-move="63"></td>
+            </tr>
+          </table>
+        </div>
+      </section>
+      <section id="Board3D" class="mobile-grid-100 tablet-grid-70 grid-80" style="display: none;">
+        <canvas></canvas>
+      </section>
+    </main>
+  </body>
+  <script data-main="tictactoe-min" src="require.js"></script>
+</html>
