@@ -14,6 +14,9 @@ require ['jquery', '3D', 'GameLogic', 'CellStates', 'GameState', 'GameStates'], 
 
       possibleMove = Board3D.getMove e
 
+      if not possibleMove?
+        clearTentativeMove()
+
       if not GameLogic.isValidMove(possibleMove) or getCell(possibleMove) is CellStates.TENTATIVE_MOVE
         possibleMove = null
 
@@ -68,7 +71,7 @@ require ['jquery', '3D', 'GameLogic', 'CellStates', 'GameState', 'GameStates'], 
     previousTentative = tentativeMove
 
   clearTentativeMove = ->
-    if previousTentative
+    if previousTentative?
       setCell previousTentative, CellStates.DEFAULT
       previousTentative = null
       GameState.unset GameStates.TENTATIVE_MOVE

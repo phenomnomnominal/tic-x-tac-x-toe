@@ -33,6 +33,10 @@ html.ready-to-reset #ResetView, #ResetGame, #NoWebGL, #Draw, #PlayerWin, #Comput
   display: none;
 }
 
-html.possible-move {
+html.possible-move, html.tentative-move {
   cursor: pointer;
+}
+
+html {
+  user-select: none;
 }

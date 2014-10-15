@@ -15,7 +15,6 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
   noWebGL = not window.WebGLRenderingContext
 
   explode = 1
-  zoom = 1
   animationQueue = []
 
   addCubes = ->
@@ -35,16 +34,13 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
       cube.position.setY (-1.5 + Math.floor((n % 16) / 4)) * explode
       cube.position.setZ (-1.5 + (n % 4)) * explode
 
-  setZoom = (newZoom) ->
-    debugger
-    zoom = newZoom
-    fov = CAMERA_FOV * (1 / zoom)
-    if fov > 180
-      fov = 180
-    if fov < 0
-      fov = 0
-    CAMERA.fov = fov
-    CAMERA.updateProjectionMatrix()
+  zoomIn = ->
+    CONTROLS.dollyOut()
+    CONTROLS.update()
+
+  zoomOut = ->
+    CONTROLS.dollyIn()
+    CONTROLS.update()
 
   setCellState = (cell, state) ->
     BOARD.children[cell].material = MATERIALS[state]
@@ -61,9 +57,6 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
     SCENE = new Three.Scene()
 
     BOARD = new Three.Object3D()
-    BOARD.rotation.z = Math.PI / 2
-    BOARD.rotation.x = Math.PI / 6
-    BOARD.rotation.y = -Math.PI / 4
     SCENE.add BOARD
 
     light1 = new Three.PointLight(0xFFEEAA, 0.5)
@@ -98,12 +91,13 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
     CONTROLS = new Three.OrbitControls(CAMERA, $canvas.get(0))
     CONTROLS.noPan = true
     CONTROLS.noZoom = true
+    CONTROLS.minPolarAngle = Math.PI / 4
+    CONTROLS.maxPolarAngle = 3 * Math.PI / 4
 
     PROJECTOR = new THREE.Projector()
 
     addCubes()
     setExplode 1
-    setZoom 1
 
   rafLoop = ->
     requestAnimationFrame rafLoop
@@ -134,31 +128,34 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
     CONTROLS.reset()
     animationQueue = []
     setExplode 1
-    setZoom 1
 
   resetBoard = ->
     setCellState cell, CellStates.DEFAULT for cell in [0...4**3]
     resetView()
 
-  createAnimation = (func, start, end, steps) ->
+  createAnimation = (func, start, end, steps = 15) ->
     if animationQueue.length > 0
       animationQueue[animationQueue.length - 1]()
     animationQueue = []
+
     for n in [0...steps]
       step = n / (steps - 1)
-      animationQueue.push func.bind null, (1 - step) * start + step * end
+      if start? and end?
+        animationQueue.push func.bind null, (1 - step) * start + step * end
+      else
+        animationQueue.push func.bind null
 
   increaseExplode = ->
-    createAnimation setExplode, explode, explode + 1, 15
+    createAnimation setExplode, explode, explode + 1
 
   decreaseExplode = ->
-    createAnimation setExplode, explode, explode - 1, 15
+    createAnimation setExplode, explode, explode - 1
 
   increaseZoom = ->
-    createAnimation setZoom, zoom, zoom * 1.2, 15
+    createAnimation zoomIn
 
   decreaseZoom = ->
-    createAnimation setZoom, zoom, zoom * 0.8, 15
+    createAnimation zoomOut
 
   $ ->
     $window.on 'resize', resize
