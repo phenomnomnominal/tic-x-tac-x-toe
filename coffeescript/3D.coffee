@@ -91,9 +91,7 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
     CONTROLS = new Three.OrbitControls(CAMERA, $canvas.get(0))
     CONTROLS.noPan = true
     CONTROLS.noZoom = true
-    CONTROLS.minPolarAngle = Math.PI / 4
-    CONTROLS.maxPolarAngle = 3 * Math.PI / 4
-
+    
     PROJECTOR = new THREE.Projector()
 
     addCubes()
