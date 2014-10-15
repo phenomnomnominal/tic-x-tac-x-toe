@@ -1,120 +1,106 @@
-require ['jquery', 'AI', 'cellStates', '2D', '3D', 'ResponsiveClass'], ($, AI, CellStates, Board2D, Board3D) ->
-  TOTAL_CELLS = 4**3
-  moves = null
+require ['jquery', '3D', 'GameLogic', 'CellStates', 'GameState', 'GameStates'], ($, Board3D, GameLogic, CellStates, GameState, GameStates) ->
+  $canvas = $ 'canvas'
 
-  $navli = $ 'nav li'
-  $help = $ '#Help'
+  setCell = (cell, state) ->
+    Board3D.setCellState cell, state
 
-  $td = $ 'td'
-  $section = $ 'section'
+  getCell = (cell) ->
+    Board3D.getCellState cell
 
-  $thinking = $ '#Thinking'
+  previousPossible = null
+  showPossibleMoves = (e) ->
+    if GameStates.READY_TO_RESET not in GameState.get()
+      clearPossibleMove()
 
-  $endgame = $ '#EndGame'
-  $draw = $ '#Draw'
-  $player = $ '#Player'
-  $computer = $ '#Computer'
-  $noWebGL = $ '#NoWebGL'
+      possibleMove = Board3D.getMove e
 
-  switchTab = ->
-    $this = $(@)
-    if not $this.hasClass 'active'
-      $this.siblings().not(@).removeClass 'active'
-      $this.addClass 'active'
-      tabName = $this.data 'tab'
-      $toShow = $ "##{tabName}"
-      $section.not($toShow).hide()
-      $toShow.show()
-      $(window).trigger 'resize'
+      if not GameLogic.isValidMove(possibleMove) or getCell(possibleMove) is CellStates.TENTATIVE_MOVE
+        possibleMove = null
 
-  hideHelp = ->
-    $help.hide()
+      if possibleMove?
+        clearTentativeMove()
+        setCell possibleMove, CellStates.POSSIBLE_MOVE
+        GameState.set GameStates.POSSIBLE_MOVE
+      previousPossible = possibleMove
 
-  updateBoards = (cell, state) ->
-    Board2D.update cell, state
-    Board3D.update cell, state
+  clearPossibleMove = ->
+    if previousPossible?
+      setCell previousPossible, CellStates.DEFAULT
+      previousPossible = null
+      GameState.unset GameStates.POSSIBLE_MOVE
 
-  resetBoards = ->
-    updateBoards i for i in [0...TOTAL_CELLS]
+  selectCell = (e) ->
+    if GameStates.READY_TO_RESET not in GameState.get()
+      playerMove = Board3D.getMove e
+      if GameLogic.isValidMove playerMove
+        if getCell(playerMove) is CellStates.TENTATIVE_MOVE
+          makeMove playerMove
+        else
+          tentativeMove playerMove
 
-  getMove = (td) ->
-    +$(td).data 'move'
+  makeMove = (playerMove) ->
+    lastComputerMove = GameLogic.getLastComputerMove()
+    if lastComputerMove
+      setCell lastComputerMove, CellStates.COMPUTER_MOVE
 
-  gameReset = ->
-    moves = []
-    resetBoards()
-    el.hide() for el in [$endgame, $thinking]
+    clearTentativeMove()
+    playerLine = GameLogic.makeMove playerMove
+    setCell playerMove, CellStates.PLAYER_MOVE
+    GameState.unset GameStates.TENTATIVE_MOVE
 
-  showPossibleMove = ->
-    move = getMove @
-    if move not in moves
-      updateBoards move, CellStates.POSSIBLE_MOVE
+    setTimeout (->
+      computerLine = getComputerMove()
+      checkPotentialWin GameLogic.processState playerLine, computerLine
+    ), 500
 
-  hidePossibleMove = ->
-    move = getMove @
-    if move not in moves
-      updateBoards move
-
-  makeMove = ->
-    move = getMove @
-    if move not in moves
-      $thinking.show()
-
-      showPreviousComputerMove()
-      playerLine = processPlayerMove move
-
-      setTimeout (->
-        $thinking.hide()
-        computerLine = processComputerMove()
-        processState playerLine, computerLine
-      ), 500
-
-  showPreviousComputerMove = ->
-    if moves.length > 1
-      updateBoards moves[moves.length - 1], CellStates.COMPUTER_MOVE
-
-  processPlayerMove = (move) ->
-    [moves, playerLine, playerMove] = AI.userTurn moves, move
-    updateBoards playerMove, CellStates.PLAYER_MOVE
-    playerLine
-
-  processComputerMove = ->
-    [moves, computerLine, computerMove] = AI.computerTurn moves
-    updateBoards computerMove, CellStates.COMPUTER_LAST_MOVE
+  getComputerMove = ->
+    [computerMove, computerLine] = GameLogic.makeComputerMove()
+    setCell computerMove, CellStates.COMPUTER_LAST_MOVE
     computerLine
 
-  processState = (playerLine, computerLine) ->
-    playerWins = playerLine?
-    computerWins = computerLine? and not playerLine?
+  previousTentative = null
+  tentativeMove = (tentativeMove) ->
+    clearTentativeMove()
+    clearPossibleMove()
 
-    if playerWins
-      showWin playerLine
-    else if computerWins
-      showWin computerLine
+    setCell tentativeMove, CellStates.TENTATIVE_MOVE
+    GameState.set GameStates.TENTATIVE_MOVE
+    previousTentative = tentativeMove
 
-    if playerLine or computerLine
-      endGame playerWins
-    else if moves.length is TOTAL_CELLS
-      endGame()
+  clearTentativeMove = ->
+    if previousTentative
+      setCell previousTentative, CellStates.DEFAULT
+      previousTentative = null
+      GameState.unset GameStates.TENTATIVE_MOVE
+
+  checkPotentialWin = (line) ->
+    showWin line if line?
 
   showWin = (line) ->
     for cell in line
-      updateBoards cell, CellStates.WIN
-
-  endGame = (playerWins) ->
-    el.hide() for el in [$draw, $player, $computer]
-    if playerWins?
-      (if playerWins then $player else $computer).show()
-    else
-      $draw.show()
-    $endgame.show()
+      setCell cell, CellStates.WIN
 
   $ ->
-    $navli.on 'click', switchTab
-    $td.on 'mouseover', showPossibleMove
-    $td.on 'mouseout', hidePossibleMove
-    $td.on 'click', makeMove
-    $endgame.on 'click', gameReset
-    $help.on 'click', hideHelp
-    if Board3D.noWebGL then $noWebGL.show()
-    gameReset()
+    $canvas.on 'mousemove', showPossibleMoves
+    $canvas.on 'click', selectCell
+    GameState.set GameStates.HELP
+    if Board3D.noWebGL
+      GameState.set GamesStates.NO_WEBGL
+
+    $('#Help').on 'click', ->
+      GameState.unset GameStates.HELP
+
+    $('#EndGame').on 'click', ->
+      GameState.unset GameStates.END_GAME
+      GameState.set GameStates.READY_TO_RESET
+
+    $('#ResetView').on 'click', Board3D.resetView
+
+    $('#ResetGame').on 'click', ->
+      GameLogic.gameReset()
+      Board3D.resetBoard()
+
+    $('#IncreaseExplode').on 'click', Board3D.increaseExplode
+    $('#DecreaseExplode').on 'click', Board3D.decreaseExplode
+    $('#IncreaseZoom').on 'click', Board3D.increaseZoom
+    $('#DecreaseZoom').on 'click', Board3D.decreaseZoom

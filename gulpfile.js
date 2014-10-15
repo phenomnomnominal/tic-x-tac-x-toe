@@ -30,7 +30,7 @@
   });
 
   gulp.task('coffee', function() {
-    return gulp.src(paths.coffee).pipe(coffee()).pipe(gulp.dest('./javascript/'));
+    return gulp.src(paths.coffee).pipe(sourcemaps.init()).pipe(coffee()).pipe(sourcemaps.write('../maps/')).pipe(gulp.dest('./javascript/'));
   });
 
   gulp.task('build-scripts', function(reportTaskDone) {
@@ -49,6 +49,7 @@
       baseUrl: './javascript',
       optimize: 'uglify2',
       preserveLicenseComments: false,
+      generateSourceMaps: true,
       name: 'tictactoe',
       out: './tictactoe-min.js',
       paths: {

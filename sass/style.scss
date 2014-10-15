@@ -1,12 +1,8 @@
 @import 'libraries/normalize';
-@import 'libraries/unsemantic';
 
 @import 'reset';
 @import 'constants';
 @import 'overlay';
-@import 'nav';
-@import '2d';
-@import '3d';
 @import 'buttons';
 
 html, body {
@@ -18,18 +14,25 @@ html, body, main {
   height: 100%;
 }
 
-main.mobile-grid-100, main.tablet-grid-100, main.grid-100 {
-  padding: 0;
-}
-
 body {
   font-size: 62.5%;
 }
 
-#Help {
+html.help #Help,
+html.thinking #Thinking,
+html.endgame #EndGame,
+html.player-win #PlayerWin,
+html.computer-win #ComputerWin,
+html.draw #Draw,
+html.no-webgl #NoWebGL,
+html.ready-to-reset #ResetGame {
   display: block;
 }
 
-#NoWebGL {
+html.ready-to-reset #ResetView, #ResetGame, #NoWebGL, #Draw, #PlayerWin, #ComputerWin {
   display: none;
+}
+
+html.possible-move {
+  cursor: pointer;
 }

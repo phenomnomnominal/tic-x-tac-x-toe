@@ -22,7 +22,9 @@ gulp.task 'default', (reportTaskDone) ->
 
 gulp.task 'coffee', ->
   gulp.src paths.coffee
+    .pipe sourcemaps.init()
     .pipe coffee()
+    .pipe sourcemaps.write '../maps/'
     .pipe gulp.dest('./javascript/')
 
 gulp.task 'build-scripts', (reportTaskDone) ->
@@ -40,6 +42,7 @@ gulp.task 'requirejs', (reportTaskDone) ->
     baseUrl: './javascript'
     optimize: 'uglify2'
     preserveLicenseComments: no
+    generateSourceMaps: yes
     name: 'tictactoe'
     out: './tictactoe-min.js'
     paths:

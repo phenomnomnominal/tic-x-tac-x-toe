@@ -1,70 +1,85 @@
 define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
   $window = $ window
   $canvas = $ 'canvas'
-  $board = $ '#Board3D'
 
-  CUBE_SIZE = 25
   SCENE = null
   CAMERA = null
   CONTROLS = null
+  CAMERA_FOV = 45
   BOARD = null
   GEOMETRY = null
   MATERIALS = {}
   RENDERER = null
+  PROJECTOR = null
 
-  xSpeed = null
-  ySpeed = null
   noWebGL = not window.WebGLRenderingContext
 
-  resize = ->
-    if $board.is ':visible'
-      CAMERA.aspect = $board.width() / $board.height()
-      CAMERA.updateProjectionMatrix()
-      RENDERER.setSize $board.width(), $board.height()
-      $canvas.width $board.width()
-      $canvas.height $board.height()
-
-  update = (cell, state) ->
-    if state
-      BOARD.children[cell].material = MATERIALS[state]
-    else
-      BOARD.children[cell].material = MATERIALS.wire
+  explode = 1
+  zoom = 1
+  animationQueue = []
 
   addCubes = ->
     for n in [4**3 - 1..0]
-      cube = new Three.Mesh(GEOMETRY, MATERIALS.wire)
-      cube.position.x = CUBE_SIZE * (-1.5 + Math.floor(n / 16))
-      cube.position.y = CUBE_SIZE * (-1.5 + Math.floor((n % 16) / 4))
-      cube.position.z = CUBE_SIZE * (-1.5 + (n % 4))
+      cube = new THREE.Mesh(GEOMETRY, MATERIALS.default)
       BOARD.add cube
 
-  resetBoard = ->
-    xSpeed = 0
-    ySpeed = 0
-    BOARD.rotation.z = Math.PI / 2
-    BOARD.rotation.x = Math.PI / 6
-    BOARD.rotation.y = -Math.PI / 4
-    CONTROLS.reset()
+  setExplode = (newExplode) ->
+    if newExplode > 5
+      newExplode = 5
+    if newExplode < 1
+      newExplode = 1
+    explode = newExplode
+    for n in [4**3 - 1..0]
+      cube = BOARD.children[n]
+      cube.position.setX (-1.5 + Math.floor(n / 16)) * explode
+      cube.position.setY (-1.5 + Math.floor((n % 16) / 4)) * explode
+      cube.position.setZ (-1.5 + (n % 4)) * explode
+
+  setZoom = (newZoom) ->
+    debugger
+    zoom = newZoom
+    fov = CAMERA_FOV * (1 / zoom)
+    if fov > 180
+      fov = 180
+    if fov < 0
+      fov = 0
+    CAMERA.fov = fov
+    CAMERA.updateProjectionMatrix()
+
+  setCellState = (cell, state) ->
+    BOARD.children[cell].material = MATERIALS[state]
+
+  getCellState = (cell) ->
+    state = Object.keys(CellStates)
+      .map (CellState) ->
+        CellStates[CellState]
+      .filter (CellState) ->
+        BOARD.children[cell].material is MATERIALS[CellState]
+    state[0]
 
   initialiseBoard = ->
     SCENE = new Three.Scene()
 
     BOARD = new Three.Object3D()
+    BOARD.rotation.z = Math.PI / 2
+    BOARD.rotation.x = Math.PI / 6
+    BOARD.rotation.y = -Math.PI / 4
     SCENE.add BOARD
 
     light1 = new Three.PointLight(0xFFEEAA, 0.5)
-    light1.position = new Three.Vector3(-1000, 1000, -1000)
+    light1.position = new Three.Vector3(-40, 40, -40)
     SCENE.add light1
 
     light2 = new Three.PointLight(0xFFEEAA, 0.5)
-    light2.position = new Three.Vector3(1000, 1000, 1000)
+    light2.position = new Three.Vector3(40, 40, 40)
     SCENE.add light2
 
-    GEOMETRY = new Three.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)
-    MATERIALS.wire = new Three.MeshBasicMaterial(color: 0x888888, opacity : 0.5, depthTest : no, wireframe: yes, transparent: yes)
+    GEOMETRY = new Three.BoxGeometry(1, 1, 1)
+    MATERIALS[CellStates.DEFAULT] = new Three.MeshBasicMaterial(color: 0xAAAAAA, opacity : 0.25, depthTest : no, transparent: yes)
+    MATERIALS[CellStates.POSSIBLE_MOVE] = new Three.MeshBasicMaterial(color: 0xFF0000, opacity : 0.25, depthTest : no, transparent: yes)
+    MATERIALS[CellStates.TENTATIVE_MOVE] = new Three.MeshBasicMaterial(color: 0xFF0000, opacity : 0.50, depthTest : no, transparent: yes)
     MATERIALS[CellStates.PLAYER_MOVE] = new Three.MeshBasicMaterial(color: 0xFF0000, opacity : 0.75, depthTest : no, transparent: yes)
     MATERIALS[CellStates.COMPUTER_MOVE] = new Three.MeshBasicMaterial(color: 0x0000FF, opacity : 0.75, depthTest : no, transparent: yes)
-    MATERIALS[CellStates.POSSIBLE_MOVE] = new Three.MeshBasicMaterial(color: 0xFFAAAA, opacity : 0.75, depthTest : no, transparent: yes)
     MATERIALS[CellStates.COMPUTER_LAST_MOVE] = new Three.MeshBasicMaterial(color: 0xAAAAFF, opacity : 0.75, depthTest : no, transparent: yes)
     MATERIALS[CellStates.WIN] = new Three.MeshBasicMaterial(color: 0x00FF00, opacity : 0.75, depthTest : no, transparent: yes)
 
@@ -73,45 +88,82 @@ define ['jquery', 'three', 'CellStates', 'orbit'], ($, Three, CellStates) ->
     else
       RENDERER = new Three.WebGLRenderer(canvas: $canvas.get(0), antialias: yes, alpha: yes)
 
-    RENDERER.setSize $board.width(), $window.height()
+    RENDERER.setSize $window.width(), $window.height()
     RENDERER.setClearColor 0xFFFFFF, 1
 
-    CAMERA = new Three.PerspectiveCamera(45, $board.width() / $board.height(), 0.1, 10000)
-    CAMERA.position.z = 300
+    CAMERA = new Three.PerspectiveCamera(CAMERA_FOV, $window.width() / $window.height(), 0.1, 400)
+    CAMERA.position.z = 12
     SCENE.add CAMERA
 
     CONTROLS = new Three.OrbitControls(CAMERA, $canvas.get(0))
     CONTROLS.noPan = true
     CONTROLS.noZoom = true
 
+    PROJECTOR = new THREE.Projector()
+
     addCubes()
-    resetBoard()
+    setExplode 1
+    setZoom 1
 
-  animate = ->
-    requestAnimationFrame animate
-    render()
-
-  render = ->
-    BOARD.rotation.x += 0.01 * xSpeed
-    if xSpeed > 0 then xSpeed -= 0.01
-    if xSpeed < 0 then xSpeed += 0.01
-    BOARD.rotation.y += 0.01 * ySpeed
-    if ySpeed > 0 then ySpeed -= 0.01
-    if ySpeed < 0 then ySpeed += 0.01
+  rafLoop = ->
+    requestAnimationFrame rafLoop
+    if animationQueue.length
+      animationQueue.shift()()
     RENDERER.render SCENE, CAMERA
 
-  rotate = (e) ->
-    switch e.keyCode
-      when 37 then ySpeed -= 0.5
-      when 38 then xSpeed -= 0.5
-      when 39 then ySpeed += 0.5
-      when 40 then xSpeed += 0.5
+  resize = ->
+    CAMERA.aspect = $window.width() / $window.height()
+    CAMERA.updateProjectionMatrix()
+    RENDERER.setSize $window.width(), $window.height()
+
+  intersect = (e) ->
+    $target = $ e.target
+    x = (e.offsetX / $target.width()) * 2 - 1
+    y = -(e.offsetY / $target.height()) * 2 + 1
+    mouse3D = new THREE.Vector3(x, y, 0.5)
+    raycaster = PROJECTOR.pickingRay mouse3D.clone(), CAMERA
+    intersections = raycaster.intersectObjects BOARD.children
+
+  getMove = (e) ->
+    intersections = intersect e
+    intersection = intersections[0]
+    if intersection
+      BOARD.children.indexOf intersection.object
+
+  resetView = ->
+    CONTROLS.reset()
+    animationQueue = []
+    setExplode 1
+    setZoom 1
+
+  resetBoard = ->
+    setCellState cell, CellStates.DEFAULT for cell in [0...4**3]
+    resetView()
+
+  createAnimation = (func, start, end, steps) ->
+    if animationQueue.length > 0
+      animationQueue[animationQueue.length - 1]()
+    animationQueue = []
+    for n in [0...steps]
+      step = n / (steps - 1)
+      animationQueue.push func.bind null, (1 - step) * start + step * end
+
+  increaseExplode = ->
+    createAnimation setExplode, explode, explode + 1, 15
+
+  decreaseExplode = ->
+    createAnimation setExplode, explode, explode - 1, 15
+
+  increaseZoom = ->
+    createAnimation setZoom, zoom, zoom * 1.2, 15
+
+  decreaseZoom = ->
+    createAnimation setZoom, zoom, zoom * 0.8, 15
 
   $ ->
     $window.on 'resize', resize
-    $window.on 'keydown', rotate
     initialiseBoard()
     resize()
-    animate()
+    rafLoop()
 
-  { update, noWebGL }
+  { noWebGL, setCellState, getCellState, getMove, resetView, resetBoard, increaseExplode, decreaseExplode, increaseZoom, decreaseZoom }
