@@ -43,7 +43,7 @@ require ['jquery', '3D', 'GameLogic', 'CellStates', 'GameState', 'GameStates'], 
 
   makeMove = (playerMove) ->
     lastComputerMove = GameLogic.getLastComputerMove()
-    if lastComputerMove
+    if lastComputerMove?
       setCell lastComputerMove, CellStates.COMPUTER_MOVE
 
     clearTentativeMove()
